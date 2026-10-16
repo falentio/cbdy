@@ -1,0 +1,894 @@
+{
+  "requestLine": "POST /v2/chat/completions",
+  "headers": {
+    "accept": "application/json",
+    "content-type": "application/json",
+    "x-requested-with": "XMLHttpRequest",
+    "x-stainless-arch": "x64",
+    "x-stainless-lang": "js",
+    "x-stainless-os": "Linux",
+    "x-stainless-package-version": "6.25.0",
+    "x-stainless-retry-count": "0",
+    "x-stainless-runtime": "node",
+    "x-stainless-runtime-version": "v24.22.0",
+    "x-conversation-id": "REDACTED-ID",
+    "x-agent-purpose": "conversation",
+    "x-ide-type": "CLI",
+    "x-ide-name": "CLI",
+    "x-ide-version": "2.168.0",
+    "x-agent-intent": "craft",
+    "x-agent-runtime": "other",
+    "x-private-data": "false",
+    "x-codebuddy-request": "1",
+    "x-request-id": "REDACTED-ID",
+    "x-conversation-message-id": "REDACTED-ID",
+    "x-conversation-request-id": "REDACTED-ID",
+    "x-root-request-id": "REDACTED-ID",
+    "x-agent-type": "main",
+    "baggage": "REDACTED-ID",
+    "traceparent": "REDACTED-ID",
+    "b3": "REDACTED-ID",
+    "x-b3-traceid": "REDACTED-ID",
+    "x-b3-parentspanid": "REDACTED-ID",
+    "x-b3-spanid": "REDACTED-ID",
+    "x-b3-sampled": "REDACTED-ID",
+    "x-trace-id": "REDACTED-ID",
+    "authorization": "REDACTED",
+    "x-user-id": "REDACTED-ID",
+    "x-domain": "www.codebuddy.ai",
+    "x-product": "SaaS",
+    "user-agent": "CLI/2.168.0 CodeBuddy/2.168.0",
+    "content-length": "98405",
+    "host": "127.0.0.1:8899",
+    "connection": "keep-alive"
+  },
+  "body": {
+    "model": "default-model",
+    "messages": [
+      {
+        "content": "You are CodeBuddy Code.You are an interactive CLI tool that helps users with software engineering tasks. Use the instruc<TRUNCATED 15692 chars>",
+        "role": "system"
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "<system-reminder data-role=\"memory\"><memory>\n# auto memory\n\nYou have a persistent, file-based memory system at `/home/ke<TRUNCATED 13214 chars>"
+          },
+          {
+            "type": "text",
+            "text": "<user_query>Reply with exactly: PONG</user_query>"
+          }
+        ],
+        "agent": "cli",
+        "conversationRequestId": "REDACTED-ID"
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Read",
+          "description": "Reads a file from the local filesystem. You can access any file directly by using this tool.\nAssume this tool is able to<TRUNCATED 1759 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "file_path": {
+                "type": "string",
+                "description": "The path to the file to read (can be absolute or relative)"
+              },
+              "offset": {
+                "type": "number",
+                "description": "The line number to start reading from. Only provide if the file is too large to read at once"
+              },
+              "limit": {
+                "type": "number",
+                "description": "The number of lines to read. Only provide if the file is too large to read at once."
+              }
+            },
+            "required": [
+              "file_path"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "Write",
+          "description": "Writes a file to the local filesystem.\n\nUsage:\n- This tool will overwrite the existing file if there is one at the provi<TRUNCATED 623 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "file_path": {
+                "type": "string",
+                "description": "The path to the file to write (can be absolute or relative)"
+              },
+              "content": {
+                "type": "string",
+                "description": "The content to write to the file"
+              }
+            },
+            "required": [
+              "file_path",
+              "content"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "Edit",
+          "description": "Performs exact string replacements in files.\n\nUsage:\n- This tool reads the file's current contents from disk and matches<TRUNCATED 1738 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "file_path": {
+                "type": "string",
+                "description": "The path to the file to modify (can be absolute or relative)"
+              },
+              "old_string": {
+                "type": "string",
+                "description": "The text to replace"
+              },
+              "new_string": {
+                "type": "string",
+                "description": "The new text to replace the old text with. must be different from old_string. If they are identical, the tool will fail."
+              },
+              "replace_all": {
+                "type": "boolean",
+                "default": false,
+                "description": "Replace all occurrences of old_string (default false)"
+              }
+            },
+            "required": [
+              "file_path",
+              "old_string",
+              "new_string"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a bash command and returns its output. The working directory persists between commands; shell state (variables,<TRUNCATED 3214 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "description": "The command to execute"
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Optional timeout in milliseconds. Omit to use the system default; the effective max is clamped by `BASH_MAX_TIMEOUT_MS` (env) / `settings.env.BASH_MAX_TIMEOUT_MS`. See the tool description for the concrete default/max values active in this session."
+              },
+              "description": {
+                "type": "string",
+                "description": "Clear, concise description of what this command does in active voice.\nNever use words like \"complex\" or \"risk\" in the de<TRUNCATED 806 chars>"
+              },
+              "run_in_background": {
+                "type": "boolean",
+                "description": "Set to true to run this command in the background. Use TaskOutput to read the output later."
+              },
+              "dangerouslyDisableSandbox": {
+                "type": "boolean",
+                "description": "Set to true ONLY when you are confident the command requires operating outside the sandbox and expect the user to approv<TRUNCATED 554 chars>"
+              }
+            },
+            "required": [
+              "command"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "Glob",
+          "description": "- Fast file pattern matching tool that works with any codebase size\n- Supports glob patterns like \"**/*.js\" or \"src/**/*<TRUNCATED 645 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "description": "The glob pattern to match files against"
+              },
+              "path": {
+                "type": "string",
+                "description": "The directory to search in. If not specified, the current working directory will be used. IMPORTANT: Omit this field to use the default directory. DO NOT enter \"undefined\" or \"null\" - simply omit it for the default behavior. Must be a valid directory path if provided."
+              },
+              "limit": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "default": 100,
+                "description": "Maximum number of results to return. Defaults to 100."
+              },
+              "offset": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0,
+                "description": "Number of results to skip from the beginning. Defaults to 0."
+              }
+            },
+            "required": [
+              "pattern"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "Grep",
+          "description": "A powerful search tool built on ripgrep\n\n  Usage:\n  - ALWAYS use Grep for search tasks. NEVER invoke `grep` or `rg` as a<TRUNCATED 999 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "description": "The regular expression pattern to search for in file contents"
+              },
+              "path": {
+                "type": "string",
+                "description": "File or directory to search in (rg PATH). Defaults to current working directory."
+              },
+              "glob": {
+                "type": "string",
+                "description": "Glob pattern to filter files (e.g. \"*.js\", \"*.{ts,tsx}\") - maps to rg --glob"
+              },
+              "output_mode": {
+                "type": "string",
+                "enum": [
+                  "content",
+                  "files_with_matches",
+                  "count"
+                ],
+                "description": "Output mode: \"content\" shows matching lines (supports -A/-B/-C context, -n line numbers, head_limit), \"files_with_matches\" shows file paths (supports head_limit), \"count\" shows match counts (supports head_limit). Defaults to \"files_with_matches\"."
+              },
+              "-B": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of lines to show before each match (rg -B). Requires output_mode: \"content\", ignored otherwise."
+              },
+              "-A": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of lines to show after each match (rg -A). Requires output_mode: \"content\", ignored otherwise."
+              },
+              "-C": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Alias for context."
+              },
+              "context": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of lines to show before and after each match (rg -C). Requires output_mode: \"content\", ignored otherwise."
+              },
+              "-n": {
+                "type": "boolean",
+                "description": "Show line numbers in output (rg -n). Requires output_mode: \"content\", ignored otherwise."
+              },
+              "-i": {
+                "type": "boolean",
+                "description": "Case insensitive search (rg -i)"
+              },
+              "type": {
+                "type": "string",
+                "description": "File type to search (rg --type). Common types: js, py, rust, go, java, etc. More efficient than include for standard file types."
+              },
+              "head_limit": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "description": "Limit output to first N lines/entries, equivalent to \"| head -N\". Works across all output modes: content (limits output lines), files_with_matches (limits file paths), count (limits count entries). When unspecified, shows all results from ripgrep."
+              },
+              "offset": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Skip first N lines/entries before applying head_limit, equivalent to \"| tail -n +N | head -N\". Works across all output modes. Defaults to 0."
+              },
+              "multiline": {
+                "type": "boolean",
+                "description": "Enable multiline mode where . matches newlines and patterns can span lines (rg -U --multiline-dotall). Default: false."
+              }
+            },
+            "required": [
+              "pattern"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "EnterPlanMode",
+          "description": "Use this tool proactively when you're about to start a non-trivial implementation task. Getting user sign-off on your ap<TRUNCATED 4022 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "ExitPlanMode",
+          "description": "Use this tool when you are in plan mode and have finished writing your plan to the plan file and are ready for user appr<TRUNCATED 1928 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "allowedPrompts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "tool": {
+                      "type": "string",
+                      "enum": [
+                        "Bash"
+                      ],
+                      "description": "The tool this prompt applies to"
+                    },
+                    "prompt": {
+                      "type": "string",
+                      "description": "Semantic description of the action, e.g. \"run tests\", \"install dependencies\""
+                    }
+                  },
+                  "required": [
+                    "tool",
+                    "prompt"
+                  ],
+                  "additionalProperties": false
+                },
+                "description": "Prompt-based permissions needed to implement the plan. These describe categories of actions rather than specific commands."
+              }
+            },
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "TaskCreate",
+          "description": "Use this tool to create a structured task list for your current coding session. This helps you track progress, organize <TRUNCATED 3062 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "subject": {
+                "type": "string",
+                "description": "A brief title for the task"
+              },
+              "description": {
+                "type": "string",
+                "description": "A detailed description of what needs to be done"
+              },
+              "activeForm": {
+                "type": "string",
+                "description": "Present continuous form shown in spinner when in_progress (e.g., \"Running tests\")"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "Arbitrary metadata to attach to the task"
+              },
+              "owner": {
+                "type": "string",
+                "description": "Task owner (agent name). Use to assign the task to a specific teammate."
+              }
+            },
+            "required": [
+              "subject",
+              "description"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "TaskGet",
+          "description": "Use this tool to retrieve a task by its ID from the task list.\n\n## When to Use This Tool\n\n- When you need the full descr<TRUNCATED 732 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "taskId": {
+                "type": "string",
+                "description": "The ID of the task to retrieve"
+              }
+            },
+            "required": [
+              "taskId"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "TaskUpdate",
+          "description": "Use this tool to update a task in the task list.\n\n## When to Use This Tool\n\n**Mark tasks as resolved:**\n- When you have <TRUNCATED 2188 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "taskId": {
+                "type": "string",
+                "description": "The ID of the task to update"
+              },
+              "subject": {
+                "type": "string",
+                "description": "New subject for the task"
+              },
+              "description": {
+                "type": "string",
+                "description": "New description for the task"
+              },
+              "activeForm": {
+                "type": "string",
+                "description": "Present continuous form shown in spinner when in_progress (e.g., \"Running tests\")"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed",
+                  "deleted"
+                ],
+                "description": "New status for the task"
+              },
+              "addBlocks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Task IDs that this task blocks"
+              },
+              "addBlockedBy": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Task IDs that block this task"
+              },
+              "owner": {
+                "type": "string",
+                "description": "New owner for the task"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "Metadata keys to merge into the task. Set a key to null to delete it."
+              }
+            },
+            "required": [
+              "taskId"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "WebFetch",
+          "description": "\n- Fetches content from a specified URL and processes it using an AI model\n- Takes a URL and a prompt as input\n- Fetches<TRUNCATED 1364 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "The URL to fetch content from"
+              },
+              "prompt": {
+                "type": "string",
+                "description": "The prompt to run on the fetched content"
+              }
+            },
+            "required": [
+              "url",
+              "prompt"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "WebSearch",
+          "description": "\n- Searches the web and uses the results to inform responses\n- Provides up-to-date information for current events and re<TRUNCATED 1339 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "minLength": 2,
+                "description": "The search query to use"
+              },
+              "allowed_domains": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Only include search results from these domains."
+              },
+              "blocked_domains": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Never include search results from these domains"
+              },
+              "freshness": {
+                "type": "string",
+                "pattern": "^(?:d(?:[1-9]|[12]\\d|30)?|m(?:[1-9]|1[0-2])?|y[1-5]?)$",
+                "description": "Filter search results by time range. Supports d[N], m[N], and y[N] for the last N calendar days, months, and years:\n- d[<TRUNCATED 463 chars>"
+              }
+            },
+            "required": [
+              "query"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "TaskStop",
+          "description": "\n- Stops a running background task by its ID\n- Takes a task_id parameter identifying the task to stop\n- Returns a success or failure status\n- Use this tool when you need to terminate a long-running task\n",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "task_id": {
+                "type": "string",
+                "description": "The ID of the background task to stop. For workers spawned by Agent(), this is the agent_id returned by that call (same string)."
+              },
+              "shell_id": {
+                "type": "string",
+                "description": "Deprecated: use task_id instead"
+              }
+            },
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "TaskOutput",
+          "description": "- Retrieves output from a running or completed task (background shell, agent, or remote session)\n- Takes a task_id param<TRUNCATED 447 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "task_id": {
+                "type": "string",
+                "description": "The ID of the background task to retrieve"
+              },
+              "block": {
+                "type": "boolean",
+                "description": "Whether to wait for task completion (default: true, up to timeout). Pass false for a non-blocking status check."
+              },
+              "timeout": {
+                "type": "number",
+                "default": 60000,
+                "description": "Timeout in milliseconds (0-600000, default: 60000)"
+              },
+              "filter": {
+                "type": "string",
+                "description": "Optional regex pattern applied only to output read by this call (background shell tasks only)"
+              },
+              "full": {
+                "type": "boolean",
+                "description": "Return the current accumulated output snapshot instead of only output added since the previous read (background shell tasks only)"
+              }
+            },
+            "required": [
+              "task_id"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "DeferExecuteTool",
+          "description": "Execute a deferred tool by name. Use this to invoke tools discovered via ToolSearch without needing them in the active t<TRUNCATED 813 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "toolName": {
+                "type": "string",
+                "description": "The exact name of the deferred tool to execute (as returned by ToolSearch)."
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "The parameters to pass to the target tool. Must match the tool's parameter schema (as returned by ToolSearch in a previous turn)."
+              }
+            },
+            "required": [
+              "toolName",
+              "params"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "SendMessage",
+          "description": "# SendMessageTool\n\nSend messages to agent teammates and handle protocol requests/responses in a team.\n\n## Message Types\n<TRUNCATED 5028 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "message",
+                  "broadcast",
+                  "shutdown_request",
+                  "shutdown_response",
+                  "plan_approval_response"
+                ],
+                "description": "Message type: \"message\" for DMs, \"broadcast\" to all teammates, \"shutdown_request\" to request shutdown, \"shutdown_response\" to respond to shutdown, \"plan_approval_response\" to approve/reject plans"
+              },
+              "recipient": {
+                "type": "string",
+                "description": "Agent name of the recipient (required for message, shutdown_request, plan_approval_response)"
+              },
+              "content": {
+                "type": "string",
+                "description": "Message text, reason, or feedback"
+              },
+              "summary": {
+                "type": "string",
+                "description": "A 5-10 word summary of the message, shown as a preview in the UI (required for message, broadcast)"
+              },
+              "request_id": {
+                "type": "string",
+                "description": "Request ID to respond to (required for shutdown_response, plan_approval_response)"
+              },
+              "approve": {
+                "type": "boolean",
+                "description": "Whether to approve the request (required for shutdown_response, plan_approval_response)"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "WaitForMcpServers",
+          "description": "Wait for MCP servers that are still connecting and whose tools are not\nyet in your tool list. Pass `servers` to wait for<TRUNCATED 557 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "servers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Server names to wait for (default: all pending)"
+              }
+            },
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "Agent",
+          "description": "Launch a new agent to handle complex, multi-step tasks autonomously.\n\nThe Agent tool launches specialized agents (subpro<TRUNCATED 9381 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "A short (3-5 word) description of the task. Defaults to `name` when omitted."
+              },
+              "prompt": {
+                "type": "string",
+                "description": "The task for the agent to perform"
+              },
+              "subagent_type": {
+                "type": "string",
+                "description": "The type of specialized agent to use for this task"
+              },
+              "model": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Model to use for this agent. Accepts a model ID, name, alias, or a routing value: \"default\" inherits from the parent, \"lite\" favors fast and cost-effective models, and \"reasoning\" favors enhanced reasoning models."
+              },
+              "resume": {
+                "type": "string",
+                "description": "Optional agent ID to resume from. If provided, the agent will continue from the previous execution transcript."
+              },
+              "name": {
+                "type": "string",
+                "description": "Name for the spawned agent. Makes it addressable via SendMessage({to: name}) while running. The name \"team-lead\" is reserved for the leader created by TeamCreate — do NOT use it for spawned teammates; pick a role-based name like \"pm\", \"ui-designer\", \"fe-dev\", etc. Names must be unique within a team."
+              },
+              "team_name": {
+                "type": "string",
+                "description": "Deprecated; ignored. The session has a single implicit active team."
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "acceptEdits",
+                  "bypassPermissions",
+                  "default",
+                  "plan",
+                  "dontAsk",
+                  "auto"
+                ],
+                "description": "Permission mode for spawned teammate (e.g., \"plan\" to require plan approval)."
+              },
+              "max_turns": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "description": "Maximum number of agentic turns (API round-trips) before stopping."
+              },
+              "run_in_background": {
+                "type": "boolean",
+                "description": "Set to true to run this agent in the background. Use TaskOutput to read the output later."
+              }
+            },
+            "required": [
+              "prompt"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "TaskList",
+          "description": "Use this tool to list all tasks in the task list.\n\n## When to Use This Tool\n\n- To see what tasks are available to work o<TRUNCATED 1686 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "Skill",
+          "description": "Execute a skill within the main conversation\n\nWhen users ask you to perform tasks, check if any of the available skills <TRUNCATED 3513 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "skill": {
+                "type": "string",
+                "description": "The skill name. E.g., \"commit\", \"review-pr\", or \"pdf\""
+              },
+              "command": {
+                "type": "string",
+                "description": "(Legacy) The skill name (no arguments). E.g., \"pdf\" or \"xlsx\""
+              },
+              "args": {
+                "type": "string",
+                "description": "Optional arguments for the skill"
+              }
+            },
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "ToolSearch",
+          "description": "Load tool schemas before invoking deferred tools.\n\nDeferred tools are NOT directly callable — use ToolSearch to load the<TRUNCATED 2902 chars>",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "queries": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Keyword-based search query using MiniSearch full-text search engine. Supports prefix matching, fuzzy matching, and relevance ranking. Must be an array of keyword strings.For better results, include BOTH Chinese and English keywords (e.g., [\"获取时间\", \"get time\"] or [\"文件搜索\", \"file search\", \"glob\"])."
+              },
+              "tool_names": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Exact, fully-qualified tool name(s) to look up — e.g., [\"mcp__time__current_time\", \"LSP\", \"mcp__cnb__cnb_create_pull\"]. Do NOT use partial names, descriptions, or keywords."
+              },
+              "top_k": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 20,
+                "default": 3,
+                "description": "Maximum number of tools to return with full details (default: 3, max: 20). Only applies when using \"queries\". Ignored when using \"tool_names\". Additional matching tools beyond this limit are shown as additional candidates."
+              }
+            },
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "strict": false
+        }
+      }
+    ],
+    "temperature": 1,
+    "max_tokens": 24000,
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    },
+    "cache_retention": "long",
+    "extra_vars": {
+      "initiator": "user"
+    }
+  }
+}

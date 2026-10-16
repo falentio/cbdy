@@ -1,0 +1,15 @@
+{
+  "name": "codebuddy-reverse",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reverse engineered CodeBuddy Code inference protocol and an OpenAI shaped adapter over it",
+  "scripts": {
+    "test": "node --test tests/",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.7.0"
+  }
+}

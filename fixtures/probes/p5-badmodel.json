@@ -1,0 +1,10 @@
+{
+  "model": "nope-does-not-exist",
+  "messages": [
+    {
+      "role": "user",
+      "content": "hi"
+    }
+  ],
+  "stream": true
+}

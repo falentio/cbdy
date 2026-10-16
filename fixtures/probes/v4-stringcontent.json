@@ -1,0 +1,19 @@
+{
+  "model": "default-model",
+  "messages": [
+    {
+      "content": "You are CodeBuddy Code.You are an interactive CLI tool that helps users with software engineering tasks. Use the instruc<TRUNCATED>",
+      "role": "system"
+    },
+    {
+      "role": "user",
+      "content": "Reply with exactly: PONG"
+    }
+  ],
+  "stream": true,
+  "stream_options": {
+    "include_usage": true
+  },
+  "temperature": 1,
+  "max_tokens": 24000
+}
