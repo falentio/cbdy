@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Reverse engineered CodeBuddy Code inference protocol and an OpenAI shaped adapter over it",
   "scripts": {
-    "test": "node --test tests/",
-    "typecheck": "tsc --noEmit"
+    "test": "node --test 'tests/**/*.test.ts'",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/smoke.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

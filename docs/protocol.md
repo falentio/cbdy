@@ -58,8 +58,9 @@ Captured from a real `codebuddy -p` run.
 | `x-agent-purpose` | no | `conversation` |
 | `x-agent-intent` | no | agent name, `craft` for the default cli agent |
 | `x-ide-type`, `x-ide-name`, `x-ide-version` | no | `CLI`, `CLI`, `2.168.0` |
-| `x-conversation-id` | no | session uuid |
-| `x-request-id`, `x-root-request-id`, `x-conversation-request-id` | no | per request and per turn |
+| `x-conversation-id` | yes | conversation uuid, with dashes |
+| `x-conversation-request-id`, `x-root-request-id` | yes | one per turn, 32 hex characters, both the same value |
+| `x-request-id`, `x-conversation-message-id` | yes | one per request, 32 hex characters, both the same value |
 | `traceparent`, `b3`, `x-b3-*`, `baggage`, `x-trace-id` | no | W3C and B3 tracing |
 | `x-stainless-*` | no | SDK fingerprint, not meaningful outside the Node SDK |
 
@@ -107,7 +108,19 @@ The server checks the role of the first message, not the content. A 51 character
 13 KB `"You are CodeBuddy Code..."` prompt, and returned 200. Gate 1 fires before
 model validation, so a bad model id reports 11128 rather than an unknown model.
 
-### Gate 2: streaming only
+### Gate 2: a conversation id is required
+
+```json
+{ "code": 11128, "msg": "conversation id missing",
+  "displayTips": { "en": "This call failed channel verification, possibly because it was not sent from an official client." } }
+```
+
+The conversation headers in the table above cannot be omitted. This gate does not
+surface in an offline test, because it is a header check: the first version of
+`./src/client.ts` passed all 28 fixture tests and was rejected live with this
+code.
+
+### Gate 3: streaming only
 
 ```json
 { "code": 11101, "msg": "Non-stream chat request is currently not supported" }
@@ -115,6 +128,74 @@ model validation, so a bad model id reports 11128 rather than an unknown model.
 
 A client asked for `stream: false` has to be served by collecting the stream
 server-side and returning one completion.
+
+## Credentials
+
+The CLI keeps its session at
+
+```text
+~/.local/share/CodeBuddyExtension/Data/Public/auth/<auth id>.info
+```
+
+where `<auth id>` is `productConfig.authentication.id`, which is
+`Tencent-Cloud.coding-copilot` for the default endpoint. The bundle names a
+`FileAuthenticationStorage` writing `.credentials.json`, but this install never
+writes that file. The real path was found by tracing the CLI's file reads:
+
+```bash
+strace -f -e trace=openat -o strace.txt codebuddy -p 'hi'
+grep -oE '"[^"]+"' strace.txt | sort -u | grep -i auth
+```
+
+```json
+{
+  "account": { "uid": "c06f162c-...", "nickname": "...", "uin": "..." },
+  "auth": {
+    "accessToken": "<RS256 JWT>",
+    "refreshToken": "<JWT>",
+    "tokenType": "Bearer",
+    "scope": "openid profile offline_access email",
+    "domain": "www.codebuddy.ai",
+    "expiresAt": 1823677309182,
+    "lastRefreshTime": 1792142540464
+  },
+  "accounts": []
+}
+```
+
+Header values come from `productConfig.authentication.attributes`:
+`tokenHeader: "Authorization"`, `tokenType: "bearerToken"`,
+`usernameHeader: "X-User-Id"`, `usernameEncode: "URLEncode"`.
+
+The access token is a Keycloak JWT whose `sub` claim equals `account.uid`, so
+the user id header can be derived from the token alone. Other claims:
+`preferred_username`, `email`, `realm_access`, `resource_access`.
+
+### Token refresh
+
+`refreshSession` in the bundle posts `/v2/auth/token/refresh` with the refresh
+token in a header rather than the body:
+
+```http
+POST /v2/auth/token/refresh
+X-Refresh-Token: <refreshToken>
+X-Auth-Refresh-Source: plugin
+```
+
+### Overrides
+
+`getAuthenticationAttributesSync` resolves a token in this order, and both env
+vars beat the stored session:
+
+| Source | Notes |
+| --- | --- |
+| `CODEBUDDY_AUTH_TOKEN` | a `Bearer ` prefix is stripped if present |
+| `CODEBUDDY_API_KEY` | same treatment |
+| `ACC_PRODUCT_CONFIG_V3` or `ACC_PRODUCT_CONFIG_V2` | JSON with `authentication.type: "custom-token"` |
+| `ACC_PRODUCT_CONFIG_PATH` | same shape, from a file path |
+| the stored session file above | the default |
+
+`./src/auth.ts` implements the first two and the stored file.
 
 ## Response
 
@@ -189,6 +270,8 @@ Run with `./tools/probe.mjs` against a capture. Bodies live in
 | v5 | captured body minus `tools` | 200, `PONG` |
 | v6 | one OpenAI function tool | 200, streamed `tool_calls`, `finish_reason: "tool_calls"` |
 | v7 | tool call plus tool result turn | 200, `finish_reason: "stop"` |
+| smoke | v2 body through `./src/client.ts` with no conversation headers | 400, code 11128 "conversation id missing" |
+| smoke | the same with the conversation headers | 200, streamed `PONG`, `prompt_tokens: 19` |
 
 ## Minimal working request
 
@@ -214,13 +297,22 @@ CODEBUDDY_BASE_URL=http://127.0.0.1:8899/v2 codebuddy -p 'Reply with exactly: PO
 # replay a candidate body with the captured credentials
 node tools/probe.mjs /tmp/cbrev/capture/001-request.txt fixtures/probes/v2-system-short.json
 
+# the whole path, from an OpenAI request to a real streamed answer
+node scripts/smoke.ts
+
 # regenerate redacted fixtures from a capture
 node tools/redact-capture.mjs /tmp/cbrev/capture fixtures
 ```
 
 ## Still open
 
-- Whether `x-domain` and `x-product` are enforced or cosmetic.
-- The full refresh flow for an expired bearer token.
+- Whether `x-domain` and `x-product` are enforced or cosmetic. No probe sent a
+  wrong value.
+- Whether the endpoint rejects a request whose `x-user-id` disagrees with the
+  token's `sub`.
+- Whether the conversation headers must be UUIDv7. `./src/client.ts` mints v7 to
+  match the CLI, but a v4 was never tried against the live server.
 - Whether the server accepts `stream_options.include_usage: false`.
+- Whether a `conversation id` has to correspond to a conversation the CLI
+  created, or any id will do.
 - Rate limits and retry semantics.
