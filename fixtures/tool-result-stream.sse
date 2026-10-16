@@ -1,17 +1,34 @@
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":"The","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":" weather in","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":" Paris is","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":" currently **","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":"18°C","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":" and","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":" sunny**","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":". It","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":" looks","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":" like a","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":" lovely day","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":"!","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":" ☀","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"content":"️","reasoning_content":"","function_call":null,"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":""}],"usage":null}
+
 data: {"id":"01a143fa4f5d783aad5da1f9b250a8f3","model":"default-model","object":"chat.completion.chunk","created":1792141997,"choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning_content":"","function_call":{"name":"","arguments":""},"refusal":"","tool_calls":[],"extra_fields":null},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":188,"completion_tokens":23,"total_tokens":211,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0,"cached_tokens":0},"prompt_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0,"cached_tokens":0},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":188,"cache_read_input_tokens":0,"cache_creation_input_tokens":0,"prompt_cache_write_tokens":0,"completion_thinking_tokens":0,"credit":0.02,"cached_tokens":0}}
+
 data: [DONE]
+

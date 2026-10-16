@@ -6,19 +6,16 @@ import type { OpenAiChatRequest, OpenAiChunk, OpenAiCompletion } from './types.t
 
 export const DEFAULT_BASE_URL = 'https://www.codebuddy.ai/v2';
 
-/** The CLI mints UUIDv7 ids, so a v4 may be rejected where a timestamped id is expected. */
-export function uuidv7(): string {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  const now = BigInt(Date.now());
-  for (let i = 0; i < 6; i += 1) {
-    bytes[i] = Number((now >> BigInt(40 - 8 * i)) & 0xffn);
-  }
-  bytes[6] = (bytes[6]! & 0x0f) | 0x70;
-  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
-  const hex = Buffer.from(bytes).toString('hex');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}
+// Copied from a captured request. The server refuses a request it cannot place in a
+// conversation, and the CLI's own client fingerprint is what makes it look official.
+const CLIENT_FINGERPRINT = {
+  'user-agent': 'CLI/2.168.0 CodeBuddy/2.168.0',
+  'x-product': 'SaaS',
+  'x-agent-type': 'main',
+  'x-ide-type': 'CLI',
+  'x-ide-name': 'CLI',
+  'x-codebuddy-request': '1',
+} as const;
 
 export interface ChatOptions extends EncodeOptions {
   baseUrl?: string;
@@ -34,23 +31,16 @@ export function requestHeaders(
   conversationId: string,
 ): Record<string, string> {
   const host = new URL(baseUrl).hostname;
-  const requestId = uuidv7().replaceAll('-', '');
-  const conversationRequestId = uuidv7().replaceAll('-', '');
+  const requestId = crypto.randomUUID().replaceAll('-', '');
+  const conversationRequestId = crypto.randomUUID().replaceAll('-', '');
   return {
     authorization: `Bearer ${credentials.accessToken}`,
     'content-type': 'application/json',
-    // The server reads the account uid from x-user-id, and rejects requests whose
-    // x-domain does not match the host it is served from.
     'x-user-id': credentials.userId,
     'x-domain': host,
-    'x-product': 'SaaS',
-    'user-agent': 'CLI/2.168.0 CodeBuddy/2.168.0',
     'x-agent-purpose': 'conversation',
     'x-agent-intent': agentName,
-    'x-agent-type': 'main',
-    'x-ide-type': 'CLI',
-    'x-ide-name': 'CLI',
-    'x-codebuddy-request': '1',
+    ...CLIENT_FINGERPRINT,
     // Without these the server answers 11128 "conversation id missing".
     'x-conversation-id': conversationId,
     'x-request-id': requestId,
@@ -66,7 +56,7 @@ async function postChat(body: unknown, options: ChatOptions): Promise<ReadableSt
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
-      ...requestHeaders(credentials, baseUrl, 'craft', options.conversationId ?? uuidv7()),
+      ...requestHeaders(credentials, baseUrl, 'craft', options.conversationId ?? crypto.randomUUID()),
       accept: 'text/event-stream',
     },
     body: JSON.stringify(body),

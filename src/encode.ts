@@ -26,7 +26,7 @@ export function encodeChatRequest(
 
   const maxTokens = request.max_tokens ?? options.maxTokens;
 
-  // stream:false is rejected with 11101, and usage is null in the last chunk without include_usage.
+  // stream:false is rejected with 11101.
   const encoded: CodeBuddyChatRequest = {
     model: resolveModel(request.model, options),
     messages,

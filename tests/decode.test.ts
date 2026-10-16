@@ -9,15 +9,6 @@ import type { OpenAiChunk } from '../src/types.ts';
 const fixture = (name: string): string =>
   readFileSync(new URL(`../fixtures/${name}`, import.meta.url), 'utf8');
 
-// The two tool fixtures store captured data lines with single newline separators, while the
-// captured 001-response.sse shows the server separates frames with a blank line.
-const reframe = (sse: string): string =>
-  sse
-    .split('\n')
-    .filter((line) => line.startsWith('data:'))
-    .map((line) => `${line}\n\n`)
-    .join('');
-
 const streamOf = (...chunks: Array<string | Uint8Array>): ReadableStream<Uint8Array> => {
   const encoder = new TextEncoder();
   return new ReadableStream<Uint8Array>({
@@ -182,7 +173,7 @@ test('collect carries reasoning_content through to the message', () => {
 
 test('the captured tool call stream accumulates one get_weather call', async () => {
   const completion = collect(
-    await drain(decodeStream(streamOf(reframe(fixture('tool-call-stream.sse'))))),
+    await drain(decodeStream(streamOf(fixture('tool-call-stream.sse')))),
   );
   const message = completion.choices[0]?.message;
 
@@ -200,7 +191,7 @@ test('the captured tool call stream accumulates one get_weather call', async () 
 });
 
 test('the captured answer survives byte level chunking', async () => {
-  const bytes = new TextEncoder().encode(reframe(fixture('tool-result-stream.sse')));
+  const bytes = new TextEncoder().encode(fixture('tool-result-stream.sse'));
   const pieces: Uint8Array[] = [];
   for (let index = 0; index < bytes.length; index += 7) pieces.push(bytes.slice(index, index + 7));
 

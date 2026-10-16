@@ -54,14 +54,16 @@ interface CodeBuddyChatRequest {
   model: string;
   messages: CodeBuddyMessage[];
   stream: true;                              // the server rejects false
-  stream_options: { include_usage: true };   // required to get usage at all
+  stream_options: { include_usage: true };   // the CLI always sends it; the server does not require it
   // ...
 }
 ```
 
 `stream` is the literal `true`, not `boolean`, and `stream_options` is not
-optional. A caller cannot build a request the server answers with 11101, and
-cannot build one that silently loses the usage block.
+optional, so a caller cannot build a request the server answers with 11101. The
+second invariant is posture rather than necessity: probe v8 showed the last chunk
+carries `usage` without it, and the field stays because the official client
+sends it.
 
 ## Design decisions
 

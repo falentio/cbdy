@@ -55,6 +55,11 @@ export function readStoredCredentials(filePath: string = credentialFilePath()): 
   };
 }
 
+/** Matches the CLI's API-key session, which has no JWT to read a subject from. */
+export function anonymousUserId(token: string): string {
+  return `anonymous_${token.slice(-8)}`;
+}
+
 /**
  * Env tokens win over the CLI's stored session, matching
  * getAuthenticationAttributesSync in the CodeBuddy bundle.
@@ -67,12 +72,7 @@ export function resolveCredentials(
   const fromEnv = env.CODEBUDDY_AUTH_TOKEN ?? env.CODEBUDDY_API_KEY;
   if (fromEnv) {
     const accessToken = fromEnv.startsWith('Bearer ') ? fromEnv.slice(7) : fromEnv;
-    const userId = stored?.userId ?? userIdFromJwt(accessToken);
-    if (!userId) {
-      throw new CredentialsUnavailableError(
-        'CODEBUDDY_AUTH_TOKEN carries a token with no sub claim and no stored account is available for the user id header',
-      );
-    }
+    const userId = stored?.userId ?? userIdFromJwt(accessToken) ?? anonymousUserId(accessToken);
     return { ...stored, accessToken, userId };
   }
   if (!stored) {

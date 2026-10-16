@@ -51,9 +51,9 @@ Captured from a real `codebuddy -p` run.
 | --- | --- | --- |
 | `authorization` | yes | `Bearer <jwt>` |
 | `content-type` | yes | `application/json` |
-| `x-user-id` | yes | account uuid, also `account.uid` in the credential store |
-| `x-domain` | yes | `www.codebuddy.ai` |
-| `x-product` | yes | `SaaS` |
+| `x-user-id` | no | account uuid, also `account.uid` in the credential store. A wrong value was accepted. |
+| `x-domain` | no | `www.codebuddy.ai`. Dropping it was accepted. |
+| `x-product` | no | `SaaS`. Dropping it was accepted. |
 | `user-agent` | yes | `CLI/2.168.0 CodeBuddy/2.168.0` |
 | `x-codebuddy-request` | no | `1` |
 | `x-agent-purpose` | no | `conversation` |
@@ -89,7 +89,7 @@ allowlisted subset above and were accepted.
 | `model` | string | yes | a product config model id, for example `default-model`, `deep-model`, `kimi-k3` |
 | `messages` | array | yes | `messages[0].role` must be `"system"`. See the gate below. |
 | `stream` | `true` | yes | `false` is rejected with code 11101. |
-| `stream_options` | object | no | `{"include_usage": true}` makes the last chunk carry `usage`. |
+| `stream_options` | object | no | `{"include_usage": true}` when present. The last chunk carries `usage` with or without it. |
 | `tools` | array | no | OpenAI function schemas, passed through unchanged. |
 | `temperature` | number | no | product config default is 1. |
 | `max_tokens` | number | no | product config per model, 24000 for `default-model`. |
@@ -168,6 +168,11 @@ Header values come from `productConfig.authentication.attributes`:
 `tokenHeader: "Authorization"`, `tokenType: "bearerToken"`,
 `usernameHeader: "X-User-Id"`, `usernameEncode: "URLEncode"`.
 
+Some builds field-encrypt `auth.accessToken`, `auth.refreshToken` and the
+account nicknames through a credential codec. The file read on this machine is
+plain JSON with the token in the clear, so `./src/auth.ts` parses it directly
+and would need the codec to read an encrypted one.
+
 The access token is a Keycloak JWT whose `sub` claim equals `account.uid`, so
 the user id header can be derived from the token alone. Other claims:
 `preferred_username`, `email`, `realm_access`, `resource_access`.
@@ -175,13 +180,34 @@ the user id header can be derived from the token alone. Other claims:
 ### Token refresh
 
 `refreshSession` in the bundle posts `/v2/auth/token/refresh` with the refresh
-token in a header rather than the body:
+token in a header rather than the body. The product config sets
+`attributes.prefixPath: "/plugin"`, and the external-link provider interpolates
+it into every auth path, so the call this install makes is:
 
 ```http
-POST /v2/auth/token/refresh
+POST https://www.codebuddy.ai/v2/plugin/auth/token/refresh
 X-Refresh-Token: <refreshToken>
 X-Auth-Refresh-Source: plugin
+X-Domain: www.codebuddy.ai
 ```
+
+The route regex `/^\/v2(\/[^/]+)?\/auth\/token\/refresh$/` on the server side
+accepts either form.
+
+### Login
+
+The SSO flow is a browser handshake, not a pasted key:
+
+1. `POST {endpoint}/v2/plugin/auth/state?platform=CLI` with `X-No-Authorization`,
+   `X-No-User-Id`, `X-No-Enterprise-Id` and `X-No-Department-Info` set. The
+   response carries `authUrl` and `state`.
+2. Open `authUrl` in a browser.
+3. Poll `GET {endpoint}/v2/plugin/auth/token?state=<state>` until it returns a
+   usable token.
+4. `GET {endpoint}/v2/plugin/accounts` for the account snapshot.
+
+`/v1/auth/login` is unrelated. It resolves to `/api/v1/auth/login`, the local web
+server's password login for callers of the CLI's own HTTP API.
 
 ### Overrides
 
@@ -194,9 +220,18 @@ vars beat the stored session:
 | `CODEBUDDY_API_KEY` | same treatment |
 | `ACC_PRODUCT_CONFIG_V3` or `ACC_PRODUCT_CONFIG_V2` | JSON with `authentication.type: "custom-token"` |
 | `ACC_PRODUCT_CONFIG_PATH` | same shape, from a file path |
+| an `apiKey` on a product config model entry | the CLI's custom-key path |
+| `apiKeyHelper` in settings | a script whose stdout is the key |
 | the stored session file above | the default |
 
-`./src/auth.ts` implements the first two and the stored file.
+`CODEBUDDY_API_KEY_DISABLED` vetoes the env key. `CODEBUDDY_API_KEY_HELPER_DISABLED`
+blocks the helper script.
+
+A session built from an API key has no JWT, so the CLI invents the user id:
+`ACC_USER_ID`, else `anonymous_` plus the last eight characters of the key. The
+CLI sends an API key as both `Authorization: Bearer` and `X-API-Key`.
+`./src/auth.ts` implements the env vars and the stored file, and reproduces the
+`anonymous_` fallback.
 
 ## Response
 
@@ -333,6 +368,10 @@ Run with `./tools/probe.mjs` against a capture. Bodies live in
 | v5 | captured body minus `tools` | 200, `PONG` |
 | v6 | one OpenAI function tool | 200, streamed `tool_calls`, `finish_reason: "tool_calls"` |
 | v7 | tool call plus tool result turn | 200, `finish_reason: "stop"` |
+| v8 | stream:true with no `stream_options` | 200, last chunk still carries the full `usage` |
+| A | a UUIDv4 `x-conversation-id` | 200, so the version does not matter |
+| B | `x-user-id` set to all zeros | 200, so the header is not checked against the token |
+| C | `x-domain` and `x-product` dropped | 200, so neither is enforced |
 | smoke | v2 body through `./src/client.ts` with no conversation headers | 400, code 11128 "conversation id missing" |
 | smoke | the same with the conversation headers | 200, streamed `PONG`, `prompt_tokens: 19` |
 
@@ -369,15 +408,14 @@ node tools/redact-capture.mjs /tmp/cbrev/capture fixtures
 
 ## Still open
 
-- Whether `x-domain` and `x-product` are enforced or cosmetic. No probe sent a
-  wrong value.
-- Whether the endpoint rejects a request whose `x-user-id` disagrees with the
-  token's `sub`.
-- Whether the conversation headers must be UUIDv7. `./src/client.ts` mints v7 to
-  match the CLI, but a v4 was never tried against the live server.
-- Whether the server accepts `stream_options.include_usage: false`.
+- What `x-user-id`, `x-domain` and `x-product` are for. None is enforced, so
+  `./src/client.ts` keeps sending them only to match the official client.
 - Whether a `conversation id` has to correspond to a conversation the CLI
-  created, or any id will do.
+  created, or any fresh id will do.
+- Whether the conversation id needs to be a UUID. A v4 was accepted, and
+  `./src/client.ts` uses `crypto.randomUUID`.
+- Whether any request the gateway rejects would be accepted with an
+  `include_usage: false` stream option. Nothing suggests the value is read.
 - Rate limits: the retry statuses and knobs above are read from the bundle, not
   measured against the live endpoint.
 - Whether `X-API-Key` is accepted on the chat endpoint in place of the bearer.

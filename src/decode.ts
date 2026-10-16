@@ -85,8 +85,6 @@ export async function* decodeStream(
         yield chunk;
       }
 
-      // An error response is JSON, not SSE, so it never terminates a frame and never reaches
-      // the payload loop above.
       if (!yieldedChunk && payloads.length === 0) {
         const envelope = codeBuddyErrorFrom(pending);
         if (envelope !== null) throw new CodeBuddyRequestError(envelope);
