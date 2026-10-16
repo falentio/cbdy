@@ -19,8 +19,8 @@ OpenAI request  [1]
 
 CodeBuddy SSE  [2]
 └── decodeStream() [2a] ← pure: SSE bytes in, OpenAI chunks out
-    ├── parseFrames() [2b] ← data: lines, [DONE] terminator
-    ├── passThrough() [2c] ← content, tool_calls, finish_reason
+    ├── splitSseFrames() [2b] ← data: lines, [DONE] terminator
+    ├── parseChunk() [2c] ← content, tool_calls, finish_reason pass through
     └── collect() [2d] ← fold the stream into one completion for stream:false callers
 
 Credentials  [3]
@@ -37,6 +37,7 @@ A typed wire model, two pure transforms over it, and one boundary module.
 | `src/encode.ts` | OpenAI params to a `CodeBuddyChatRequest` | pure |
 | `src/decode.ts` | an SSE body to OpenAI chunks, and a collector | pure |
 | `src/auth.ts` | resolve a bearer token and user id | boundary |
+| `src/errors.ts` | the two wire error envelopes as one `Error` | boundary |
 | `src/client.ts` | post an encoded body, return a decoded stream | boundary |
 | `src/index.ts` | the public surface | re-export |
 
