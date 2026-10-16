@@ -16,11 +16,10 @@ export class CodeBuddyRequestError extends Error {
   }
 }
 
-/** The gateway's envelope: {code, msg, data?, displayMsg, displayTips, actions}. */
 export function envelopeFrom<T>(text: string): (CodeBuddyError & { data?: T }) | null {
   const parsed = parseObject(text);
   if (parsed === null) return null;
-  if (typeof parsed['code'] !== 'number' || 'object' in parsed) return null;
+  if (typeof parsed['code'] !== 'number') return null;
   return parsed as unknown as CodeBuddyError & { data?: T };
 }
 

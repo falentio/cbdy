@@ -1,4 +1,3 @@
-// Turns a live login poll response into a fixture set with tokens and identity replaced.
 // usage: node tools/redact-login.mjs <saved-token-response.json> <fixtures-dir>
 import fs from 'node:fs';
 import path from 'node:path';

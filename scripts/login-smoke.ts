@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { credentialFilePath, readStoredCredentials } from '../src/auth.ts';
 import { streamChat } from '../src/client.ts';
-import { fetchAccounts, login, toStoredSession, writeStoredSession } from '../src/login.ts';
+import { fetchAccounts, jwtSubject, login, toStoredSession, writeStoredSession } from '../src/login.ts';
 import type { LoginToken } from '../src/login.ts';
 
 const captureFlag = process.argv.indexOf('--from-capture');
@@ -41,7 +41,7 @@ console.log(`matches credentialFilePath(home): ${filePath === credentialFilePath
 const reloaded = readStoredCredentials(filePath);
 if (reloaded === undefined) throw new Error('the file written by login was not readable');
 if (reloaded.accessToken !== token.accessToken) throw new Error('the access token did not round-trip');
-const subject = JSON.parse(Buffer.from(token.accessToken.split('.')[1]!, 'base64url').toString('utf8')).sub;
+const subject = jwtSubject(token.accessToken);
 if (reloaded.userId !== subject) throw new Error(`user id mismatch: ${reloaded.userId} vs ${subject}`);
 console.log(`reloaded user id: ${reloaded.userId}`);
 

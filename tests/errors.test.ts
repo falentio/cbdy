@@ -34,6 +34,15 @@ test('falls back to the raw body when neither envelope fits', () => {
   assert.match(error.message, /nginx/);
 });
 
+test('a chat completion chunk is not read as an envelope', () => {
+  const chunk = JSON.stringify({
+    id: 'x',
+    object: 'chat.completion.chunk',
+    choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
+  });
+  assert.equal(codeBuddyErrorFrom(chunk), null);
+});
+
 test('an empty body does not throw', () => {
   assert.equal(codeBuddyErrorFrom(''), null);
   assert.ok(requestErrorFrom(500, '') instanceof Error);
