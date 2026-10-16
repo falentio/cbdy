@@ -1,0 +1,15 @@
+{
+  "code": 0,
+  "msg": "OK",
+  "requestId": "redacted",
+  "data": {
+    "accessToken": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3d3dy5jb2RlYnVkZHkuYWkvYXV0aC9yZWFsbXMvY29waWxvdCJ9.REDACTED-SIGNATURE",
+    "expiresIn": 31533758,
+    "refreshExpiresIn": 31533758,
+    "refreshToken": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiLCJ0eXAiOiJPZmZsaW5lIn0.REDACTED-SIGNATURE",
+    "tokenType": "Bearer",
+    "sessionState": "00000000-0000-0000-0000-000000000000",
+    "scope": "openid profile offline_access email",
+    "domain": "www.codebuddy.ai"
+  }
+}

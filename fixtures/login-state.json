@@ -1,0 +1,9 @@
+{
+  "code": 0,
+  "msg": "OK",
+  "requestId": "redacted",
+  "data": {
+    "state": "2c7f39cb-aa53-459f-acd6-46a52eb466c1",
+    "authUrl": "https://www.codebuddy.ai/login?platform=CLI&state=2c7f39cb-aa53-459f-acd6-46a52eb466c1"
+  }
+}

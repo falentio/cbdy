@@ -5,6 +5,8 @@ inference API.
 
 - `./docs/protocol.md` is the wire protocol, with every claim labelled captured,
   probed, or read from the bundle.
+- `./docs/login.md` is the browser login flow, with a working implementation in
+  `./src/login.ts`.
 - `./docs/bridge.md` is the design of the adapter.
 - `./tools/capture-proxy.mjs` logs the CLI's own traffic by setting
   `CODEBUDDY_BASE_URL` at it.

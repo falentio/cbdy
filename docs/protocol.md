@@ -132,6 +132,8 @@ server-side and returning one completion.
 
 ## Credentials
 
+To obtain credentials in the first place, see `./docs/login.md`.
+
 The CLI keeps its session at
 
 ```text
