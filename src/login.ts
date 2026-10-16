@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { credentialFilePath } from './auth.ts';
-import { CodeBuddyRequestError, requestErrorFrom } from './errors.ts';
+import { CodeBuddyRequestError, envelopeFrom, requestErrorFrom } from './errors.ts';
 import type { CodeBuddyError } from './types.ts';
 
 export interface LoginRequest {
@@ -63,8 +63,6 @@ const DEFAULT_TIMEOUT_MS = 300_000;
 // A still-open browser handshake is code 11217, "login ing...", not a failure:
 // the gateway has no token to hand over yet.
 const LOGIN_PENDING_CODE = 11217;
-
-type LoginEnvelope<T> = CodeBuddyError & { data?: T };
 
 export function loginHeaders(version: string): Record<string, string> {
   return {
@@ -220,25 +218,12 @@ export async function login(
   return { session, path: filePath };
 }
 
-async function pluginCall<T>(url: string, init: RequestInit): Promise<LoginEnvelope<T>> {
+async function pluginCall<T>(url: string, init: RequestInit): Promise<CodeBuddyError & { data?: T }> {
   const response = await fetch(url, init);
   const body = await response.text();
-  const envelope = loginEnvelopeFrom<T>(body);
-  if (!response.ok || envelope === undefined) throw requestErrorFrom(response.status, body);
+  const envelope = envelopeFrom<T>(body);
+  if (!response.ok || envelope === null) throw requestErrorFrom(response.status, body);
   return envelope;
-}
-
-function loginEnvelopeFrom<T>(body: string): LoginEnvelope<T> | undefined {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(body);
-  } catch {
-    return undefined;
-  }
-  if (typeof parsed !== 'object' || parsed === null) return undefined;
-  const code = (parsed as { code?: unknown }).code;
-  if (typeof code !== 'number') return undefined;
-  return parsed as LoginEnvelope<T>;
 }
 
 function withVersion(authUrl: string, version: string): string {

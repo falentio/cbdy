@@ -1,0 +1,27 @@
+{
+  "uid": "00000000-0000-0000-0000-000000000000",
+  "nickname": "redacted",
+  "uin": "redacted",
+  "type": "redacted",
+  "lastLogin": true,
+  "isCreator": false,
+  "isAdmin": false,
+  "pluginEnabled": true,
+  "deployStatus": {
+    "statusCode": 0,
+    "statusMsg": "",
+    "detailMsg": ""
+  },
+  "accountType": "",
+  "sso": {
+    "domain": "",
+    "domainModifiedTimes": 0
+  },
+  "idp": "",
+  "areaInfoComplete": true,
+  "oneidAccountId": "",
+  "isCurrentOneIdEnterprise": false,
+  "isCurrentOneIdPersonal": false,
+  "isFirstLogin": false,
+  "logOutEnable": false
+}

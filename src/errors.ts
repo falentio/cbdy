@@ -16,12 +16,16 @@ export class CodeBuddyRequestError extends Error {
   }
 }
 
-/** The gateway's own envelope: {code, msg, displayMsg, displayTips, actions}. */
-export function codeBuddyErrorFrom(text: string): CodeBuddyError | null {
+/** The gateway's envelope: {code, msg, data?, displayMsg, displayTips, actions}. */
+export function envelopeFrom<T>(text: string): (CodeBuddyError & { data?: T }) | null {
   const parsed = parseObject(text);
   if (parsed === null) return null;
   if (typeof parsed['code'] !== 'number' || 'object' in parsed) return null;
-  return parsed as unknown as CodeBuddyError;
+  return parsed as unknown as CodeBuddyError & { data?: T };
+}
+
+export function codeBuddyErrorFrom(text: string): CodeBuddyError | null {
+  return envelopeFrom(text);
 }
 
 /** The upstream model adapter's envelope: {error: {code, type, message}}. */
