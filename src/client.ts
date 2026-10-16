@@ -23,7 +23,6 @@ export function uuidv7(): string {
 export interface ChatOptions extends EncodeOptions {
   baseUrl?: string;
   credentials?: Credentials;
-  fetch?: typeof fetch;
   /** Reuse one value across a conversation; a fresh one starts a new conversation. */
   conversationId?: string;
 }
@@ -64,9 +63,7 @@ export function requestHeaders(
 async function postChat(body: unknown, options: ChatOptions): Promise<ReadableStream<Uint8Array>> {
   const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
   const credentials = options.credentials ?? resolveCredentials();
-  const doFetch = options.fetch ?? fetch;
-
-  const response = await doFetch(`${baseUrl}/chat/completions`, {
+  const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       ...requestHeaders(credentials, baseUrl, 'craft', options.conversationId ?? uuidv7()),
