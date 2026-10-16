@@ -30,6 +30,7 @@ Resolution, per `codebuddy-headless.js`:
 | --- | --- | --- |
 | `CODEBUDDY_BASE_URL` | always, when set | `${CODEBUDDY_BASE_URL}/chat/completions` |
 | product config `endpoint` | otherwise | `${endpoint}/v2/chat/completions` |
+| a `url` on the model entry | when set | that url, ahead of both of the above |
 
 The env override does not add `/v2`, so set it to `https://host/v2` to mirror the
 default path. Confirmed live: with `CODEBUDDY_BASE_URL=http://127.0.0.1:8899/v2`
@@ -216,7 +217,7 @@ Deltas always carry the full key set with empty values. Fields worth knowing:
 | Field | Meaning |
 | --- | --- |
 | `delta.content` | assistant text, a few characters at a time |
-| `delta.reasoning_content` | thinking text, present on reasoning models |
+| `delta.reasoning_content` | thinking text, present on reasoning models. The CLI also reads a plain `delta.reasoning` fallback. |
 | `delta.tool_calls` | OpenAI indexed tool calls, see below |
 | `delta.function_call` | always `{\"name\":\"\",\"arguments\":\"\"}` on the final chunk |
 | `delta.extra_fields` | null in every capture |
@@ -248,10 +249,72 @@ Sending the tool result back uses OpenAI shapes and works unchanged:
 | `prompt_tokens`, `completion_tokens`, `total_tokens` | standard |
 | `prompt_tokens_details.cached_tokens` | standard |
 | `prompt_cache_hit_tokens` | prompt tokens served from cache |
-| `prompt_cache_miss_tokens` | prompt tokens that cost full price |
+| `prompt_cache_miss_tokens` | prompt tokens that wrote a cache entry, despite the name |
 | `completion_thinking_tokens` | thinking tokens, only billed on reasoning models |
 | `credit` | charged credits, 0.93 for a two token reply against a 22 KB prompt |
 | `prompt_cache_write_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens` | zero in every capture |
+
+## Errors
+
+Two envelopes exist. The CodeBuddy gateway answers with its own:
+
+```json
+{ "code": 11128, "msg": "first message is not system prompt",
+  "requestId": "831b60d9-...",
+  "displayMsg": { "en": "Request blocked. Please send it again", "zh": "...", "zh-hant": "..." },
+  "displayTips": { "en": "This call failed channel verification...", "zh": "...", "zh-hant": "..." },
+  "actions": ["EDIT_INPUT", "SUBMIT_FEEDBACK"] }
+```
+
+The upstream model adapter answers with OpenAI's:
+
+```json
+{ "error": { "code": "...", "type": "...", "message": "..." } }
+```
+
+`errorFromHttpResponse` in the bundle reads the second shape and takes the
+request id from the `x-request-id` response header rather than the body. It maps
+statuses to reasons: 401 and 403 to `Authentication`, 429 to `RateLimit` or
+`QuotaExhausted`, 5xx to `ProviderInternal`, other 4xx to `InvalidRequest`.
+`./src/errors.ts` parses both.
+
+## Retries
+
+The CLI disables retries inside the OpenAI SDK (`maxRetries: 0`) and runs its own
+loop around the request.
+
+| Knob | Default | Meaning |
+| --- | --- | --- |
+| `CODEBUDDY_MAX_RETRIES` | 1 | request level attempts, capped at 15 |
+| `CODEBUDDY_MODEL_401_MAX_RETRIES` | 0 | attempts after a 401, capped at 15 |
+| `CODEBUDDY_MODEL_401_RETRY_DELAY_MS` | 2000 | delay after a 401, capped at 32000 |
+| `CODEBUDDY_STREAM_TIMEOUT_MS` | 1200000 | idle watchdog |
+| `CODEBUDDY_MAX_RETRIES` | 1 | see above |
+
+Retryable statuses are 408, 409, 429, 502, 503 and 529. The delay is the
+`retry-after` header when present, otherwise exponential from 500 ms capped at
+32 s. `./src/client.ts` does not retry; a caller that wants this loop owns it.
+
+## Request signing
+
+There is none. Authentication is bearer only, with `X-API-Key` as the alternative
+header. The bundle's header enum carries `traceparent`, `b3` and `X-B3-*` for
+tracing and no signature, nonce, or timestamp header.
+
+## Product config, the /v3/config call
+
+The CLI fetches its model catalog from `GET {endpoint}/v3/config` with
+`params: {repos: ...}`, a 5 s timeout, and `Connection: close`. The response is
+`{"data": {...}}` and supplies `models`, `agents`, `productFeatures`,
+`authentication`, `telemetry` and `commands`.
+
+A client does not need it. The package ships a bundled `product.json` with the
+same endpoint and models, and `resolveModelBaseURL` falls back to
+`CODEBUDDY_BASE_URL` and then to the product endpoint. `./src/client.ts` skips
+the call entirely and takes the model id from its caller.
+
+Cached copies live in `~/.codebuddy/local_storage/entry_<md5>.info` as gzipped
+base64, which is where the model list in this document came from.
 
 ## Probe matrix
 
@@ -315,4 +378,6 @@ node tools/redact-capture.mjs /tmp/cbrev/capture fixtures
 - Whether the server accepts `stream_options.include_usage: false`.
 - Whether a `conversation id` has to correspond to a conversation the CLI
   created, or any id will do.
-- Rate limits and retry semantics.
+- Rate limits: the retry statuses and knobs above are read from the bundle, not
+  measured against the live endpoint.
+- Whether `X-API-Key` is accepted on the chat endpoint in place of the bearer.

@@ -239,3 +239,25 @@ test('an error envelope framed as a data line throws too', async () => {
     return true;
   });
 });
+
+test('collect falls back to a plain reasoning delta', () => {
+  const chunks = [
+    {
+      id: 'x',
+      object: 'chat.completion.chunk' as const,
+      created: 1,
+      model: 'm',
+      choices: [{ index: 0, delta: { reasoning: 'thinking' }, finish_reason: '' }],
+    },
+    {
+      id: 'x',
+      object: 'chat.completion.chunk' as const,
+      created: 1,
+      model: 'm',
+      choices: [{ index: 0, delta: { content: 'answer' }, finish_reason: 'stop' }],
+    },
+  ];
+  const completion = collect(chunks as never);
+  assert.equal(completion.choices[0]?.message.reasoning_content, 'thinking');
+  assert.equal(completion.choices[0]?.message.content, 'answer');
+});

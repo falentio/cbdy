@@ -16,7 +16,27 @@ export class CodeBuddyRequestError extends Error {
   }
 }
 
+/** The gateway's own envelope: {code, msg, displayMsg, displayTips, actions}. */
 export function codeBuddyErrorFrom(text: string): CodeBuddyError | null {
+  const parsed = parseObject(text);
+  if (parsed === null) return null;
+  if (typeof parsed['code'] !== 'number' || 'object' in parsed) return null;
+  return parsed as unknown as CodeBuddyError;
+}
+
+/** The upstream model adapter's envelope: {error: {code, type, message}}. */
+export function upstreamErrorMessageFrom(text: string): string | null {
+  const parsed = parseObject(text);
+  const error = parsed?.['error'];
+  if (typeof error !== 'object' || error === null) return null;
+  const inner = error as Record<string, unknown>;
+  const message = typeof inner['message'] === 'string' ? inner['message'] : 'no message';
+  const type = typeof inner['type'] === 'string' ? inner['type'] : 'error';
+  const code = typeof inner['code'] === 'string' ? `${inner['code']} ` : '';
+  return `${type}: ${code}${message}`;
+}
+
+function parseObject(text: string): Record<string, unknown> | null {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -24,15 +44,15 @@ export function codeBuddyErrorFrom(text: string): CodeBuddyError | null {
     return null;
   }
   if (typeof parsed !== 'object' || parsed === null) return null;
-  const envelope = parsed as Record<string, unknown>;
-  if (typeof envelope['code'] !== 'number' || 'object' in envelope) return null;
-  return parsed as CodeBuddyError;
+  return parsed as Record<string, unknown>;
 }
 
 export function requestErrorFrom(status: number, body: string): Error {
   const envelope = codeBuddyErrorFrom(body);
   if (envelope !== null) return new CodeBuddyRequestError(envelope, status);
+  const upstream = upstreamErrorMessageFrom(body);
+  if (upstream !== null) return new Error(`CodeBuddy returned ${status} with ${upstream}`);
   return new Error(
-    `CodeBuddy returned ${status} with a body that is not an error envelope: ${body.slice(0, 300)}`,
+    `CodeBuddy returned ${status} with a body that is neither error envelope: ${body.slice(0, 300)}`,
   );
 }

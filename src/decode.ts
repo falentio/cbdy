@@ -1,5 +1,5 @@
+import { CodeBuddyRequestError, codeBuddyErrorFrom } from './errors.ts';
 import type {
-  CodeBuddyError,
   OpenAiChunk,
   OpenAiCompletion,
   OpenAiCompletionMessage,
@@ -56,20 +56,6 @@ export function parseChunk(payload: string): OpenAiChunk | 'done' | null {
   return parsed as OpenAiChunk;
 }
 
-function errorEnvelope(payload: string): CodeBuddyError | null {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(payload);
-  } catch {
-    return null;
-  }
-
-  if (typeof parsed !== 'object' || parsed === null) return null;
-  const envelope = parsed as Record<string, unknown>;
-  if (typeof envelope['code'] !== 'number' || 'object' in envelope) return null;
-  return parsed as CodeBuddyError;
-}
-
 export async function* decodeStream(
   body: ReadableStream<Uint8Array>,
 ): AsyncGenerator<OpenAiChunk> {
@@ -87,8 +73,8 @@ export async function* decodeStream(
 
       for (const payload of payloads) {
         if (!yieldedChunk) {
-          const envelope = errorEnvelope(payload);
-          if (envelope !== null) throw envelope;
+          const envelope = codeBuddyErrorFrom(payload);
+          if (envelope !== null) throw new CodeBuddyRequestError(envelope);
         }
 
         const chunk = parseChunk(payload);
@@ -102,8 +88,8 @@ export async function* decodeStream(
       // An error response is JSON, not SSE, so it never terminates a frame and never reaches
       // the payload loop above.
       if (!yieldedChunk && payloads.length === 0) {
-        const envelope = errorEnvelope(pending);
-        if (envelope !== null) throw envelope;
+        const envelope = codeBuddyErrorFrom(pending);
+        if (envelope !== null) throw new CodeBuddyRequestError(envelope);
       }
 
       if (result.done) return;
@@ -140,6 +126,7 @@ export function collect(chunks: Iterable<OpenAiChunk>): OpenAiCompletion {
     const delta = choice.delta;
     if (typeof delta['content'] === 'string') content += delta['content'];
     if (typeof delta['reasoning_content'] === 'string') reasoning += delta['reasoning_content'];
+    else if (typeof delta['reasoning'] === 'string') reasoning += delta['reasoning'];
     if (typeof choice.finish_reason === 'string' && choice.finish_reason !== '') {
       finishReason = choice.finish_reason;
     }
