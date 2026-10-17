@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>codebuddy-proxy</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+  h1 { font-size: 1.4rem; }
+  ul { list-style: none; padding: 0; }
+  li { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent); }
+  li .name { flex: 1; }
+  .badge { background: Highlight; color: HighlightText; border-radius: 999px; padding: 0.1rem 0.6rem; font-size: 0.8rem; }
+  button { cursor: pointer; }
+  #login-status { margin: 1rem 0; padding: 0.75rem 1rem; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 8px; display: none; }
+  #login-status.failed { color: CanvasText; border-color: red; }
+  #login-status a { word-break: break-all; }
+  .empty { color: gray; }
+</style>
+</head>
+<body>
+<h1>codebuddy-proxy accounts</h1>
+<button id="add">Add account</button>
+<div id="login-status"></div>
+<ul id="accounts"></ul>
+<script>
+const accountsEl = document.getElementById('accounts');
+const loginEl = document.getElementById('login-status');
+const addEl = document.getElementById('add');
+
+function row(account) {
+  const li = document.createElement('li');
+  const name = document.createElement('span');
+  name.className = 'name';
+  name.textContent = account.nickname || account.uid;
+  li.append(name);
+  if (account.active) {
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = 'active';
+    li.append(badge);
+  }
+  const setActive = document.createElement('button');
+  setActive.textContent = 'Set active';
+  setActive.disabled = account.active;
+  setActive.addEventListener('click', async () => {
+    await fetch('/api/accounts/' + encodeURIComponent(account.uid) + '/active', { method: 'POST' });
+    refresh();
+  });
+  const remove = document.createElement('button');
+  remove.textContent = 'Remove';
+  remove.addEventListener('click', async () => {
+    await fetch('/api/accounts/' + encodeURIComponent(account.uid), { method: 'DELETE' });
+    refresh();
+  });
+  li.append(setActive, remove);
+  return li;
+}
+
+function render(data) {
+  accountsEl.replaceChildren(
+    ...(data.accounts.length === 0
+      ? [Object.assign(document.createElement('li'), { className: 'empty', textContent: 'No accounts yet.' })]
+      : data.accounts.map(row)),
+  );
+  const login = data.login;
+  if (login === null) {
+    loginEl.style.display = 'none';
+    return false;
+  }
+  loginEl.style.display = 'block';
+  loginEl.classList.toggle('failed', login.status === 'failed');
+  if (login.status === 'pending') {
+    const link = document.createElement('a');
+    link.href = login.loginUrl;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = login.loginUrl;
+    loginEl.replaceChildren('Waiting for the browser sign-in — open: ', link);
+    return true;
+  }
+  loginEl.textContent = 'Last login failed: ' + login.error;
+  return false;
+}
+
+async function refresh() {
+  let data;
+  try {
+    data = await (await fetch('/api/accounts')).json();
+  } catch {
+    return;
+  }
+  if (render(data)) setTimeout(refresh, 2000);
+}
+
+addEl.addEventListener('click', async () => {
+  addEl.disabled = true;
+  try {
+    const response = await fetch('/api/accounts/login', { method: 'POST' });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      loginEl.style.display = 'block';
+      loginEl.classList.add('failed');
+      loginEl.textContent = 'Could not start login: ' + (body.error?.message ?? response.status);
+      return;
+    }
+  } finally {
+    addEl.disabled = false;
+  }
+  refresh();
+});
+
+refresh();
+</script>
+</body>
+</html>

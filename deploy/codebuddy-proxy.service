@@ -1,0 +1,12 @@
+[Unit]
+Description=CodeBuddy OpenAI-compatible proxy
+
+[Service]
+WorkingDirectory=%h/Repositories/codebuddy-reverse
+ExecStart=%h/.bun/bin/bun src/server/main.ts
+Environment=CODEBUDDY_PROXY_PORT=8787
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
