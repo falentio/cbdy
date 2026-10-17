@@ -128,7 +128,7 @@ export class Store {
       const existing = pool.accounts.find((candidate) => candidate.uid === account.uid);
       const stored: StoredAccount = {
         uid: account.uid,
-        nickname: account.nickname,
+        nickname: existing?.nickname ?? account.nickname,
         credentials,
         addedAt: existing?.addedAt ?? Date.now(),
       };

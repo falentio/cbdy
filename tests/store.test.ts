@@ -104,3 +104,32 @@ test('removing an unknown account changes nothing', async () => {
   assert.equal((await reload(filePath)).accounts().length, 1);
   assert.equal(await store.setActive('ghost'), false);
 });
+
+test('importAccount refreshes credentials but keeps the existing nickname', async () => {
+  const filePath = tempStorePath();
+  const store = await Store.load(filePath);
+  await store.importAccount({ uid: 'u1', nickname: 'Kevin' }, {
+    accessToken: 'old-token',
+    userId: 'u1',
+    refreshToken: 'old-refresh',
+    expiresAt: 1_000,
+  });
+
+  await store.importAccount({ uid: 'u1', nickname: 'Account 1' }, {
+    accessToken: 'new-token',
+    userId: 'u1',
+    refreshToken: 'new-refresh',
+    expiresAt: 2_000,
+  });
+
+  const persisted = await reload(filePath);
+  const accounts = persisted.accounts();
+  assert.equal(accounts.length, 1);
+  assert.equal(accounts[0]?.nickname, 'Kevin');
+  assert.equal(accounts[0]?.active, true);
+  const credentials = persisted.activeCredentials();
+  assert.equal(credentials?.accessToken, 'new-token');
+  assert.equal(credentials?.refreshToken, 'new-refresh');
+  assert.equal(credentials?.expiresAt, 2_000);
+});
+
