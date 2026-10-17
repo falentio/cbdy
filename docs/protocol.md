@@ -291,6 +291,12 @@ Sending the tool result back uses OpenAI shapes and works unchanged:
 | `credit` | charged credits, 0.93 for a two token reply against a 22 KB prompt |
 | `prompt_cache_write_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens` | zero in every capture |
 
+A fresh prompt reports every prompt token as a miss, and a repeat reads part of
+what the first request wrote. Probed live on `deepseek-v4.1-flash`: one prompt
+of about 310 tokens, sent twice under different conversation ids, reported
+`prompt_cache_hit_tokens` 0 then 128, with `prompt_cache_miss_tokens` 310 then
+182. `./scripts/cache-smoke.ts` reruns the probe.
+
 ## Errors
 
 Two envelopes exist. The CodeBuddy gateway answers with its own:
@@ -376,6 +382,7 @@ Run with `./tools/probe.mjs` against a capture. Bodies live in
 | C | `x-domain` and `x-product` dropped | 200, so neither is enforced |
 | smoke | v2 body through `./src/client.ts` with no conversation headers | 400, code 11128 "conversation id missing" |
 | smoke | the same with the conversation headers | 200, streamed `PONG`, `prompt_tokens: 19` |
+| cache-smoke | `./scripts/cache-smoke.ts`: a prompt sent twice on `deepseek-v4.1-flash` | run 1 hit 0 / miss 310; run 2 hit 128 / miss 182 |
 
 ## Minimal working request
 
@@ -404,6 +411,9 @@ node tools/probe.mjs /tmp/cbrev/capture/001-request.txt fixtures/probes/v2-syste
 # the whole path, from an OpenAI request to a real streamed answer
 node scripts/smoke.ts
 
+# a fresh prompt sent twice, for the cache miss then the hit
+node scripts/cache-smoke.ts
+
 # regenerate redacted fixtures from a capture
 node tools/redact-capture.mjs /tmp/cbrev/capture fixtures
 ```
@@ -421,3 +431,5 @@ node tools/redact-capture.mjs /tmp/cbrev/capture fixtures
 - Rate limits: the retry statuses and knobs above are read from the bundle, not
   measured against the live endpoint.
 - Whether `X-API-Key` is accepted on the chat endpoint in place of the bearer.
+- What caps the cache read. A repeat hit 128 of about 310 prompt tokens, and
+  the captured request hit 14336 of 22098.
