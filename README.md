@@ -8,6 +8,7 @@ inference API.
 - `./docs/login.md` is the browser login flow, with a working implementation in
   `./src/login.ts`.
 - `./docs/bridge.md` is the design of the adapter.
+- `./docs/server.md` is the proxy service: an OpenAI-compatible endpoint over a managed account pool.
 - `./tools/capture-proxy.mjs` logs the CLI's own traffic by setting
   `CODEBUDDY_BASE_URL` at it.
 - `./tools/probe.mjs` replays a candidate request body with captured credentials.
