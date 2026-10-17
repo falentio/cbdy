@@ -46,8 +46,15 @@ To reuse the session the CLI already has, import it once:
 
     node scripts/import-cli-session.ts
 
-The first account becomes active. Requests use the active account; switch with
-the page or `POST /api/accounts/{uid}/active`.
+The first account becomes active. Chat requests rotate across the pool: each one
+tries the active account first, then the rest in stored order, and gives each
+account two attempts before moving on. When a request exhausts an account's two
+attempts, that account sits out for 60 seconds; later requests skip it during
+the cooldown, so an account that is out of credits stops leading every request.
+A failure after the first streamed chunk has reached the caller is not retried,
+because the caller already has bytes. When every account fails, the last
+upstream error is returned. Cooldowns live in memory and clear on restart.
+Switch the lead with the page or `POST /api/accounts/{uid}/active`.
 
 To pull accounts from a 9router installation instead, export them once and
 import the file:
@@ -73,5 +80,4 @@ aliases in `~/.local/share/codebuddy-proxy/settings.json`, read at boot:
 No caller authentication: the service binds 127.0.0.1 and is meant for the
 local machine. No token refresh: tokens live about a year per
 `./docs/login.md`, and an expired bearer surfaces as a 502; re-add the
-account. No retries or rate limiting: `./docs/bridge.md` defers the same
-things.
+account. No rate limiting: `./docs/bridge.md` defers it.
