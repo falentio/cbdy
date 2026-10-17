@@ -49,6 +49,16 @@ To reuse the session the CLI already has, import it once:
 The first account becomes active. Requests use the active account; switch with
 the page or `POST /api/accounts/{uid}/active`.
 
+To pull accounts from a 9router installation instead, export them once and
+import the file:
+
+    node tools/export-9router-accounts.mjs
+    node scripts/import-accounts.ts ~/.local/share/codebuddy-proxy/9router-accounts.json
+
+The export defaults to `~/.local/share/codebuddy-proxy/9router-accounts.json`,
+mode 0600, one entry per 9router `codebuddy-intl` connection. Re-importing the
+same file refreshes credentials and keeps the nicknames already in the pool.
+
 ## Models
 
 A request's `model` is sent to CodeBuddy verbatim unless it appears in the
