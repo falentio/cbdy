@@ -4,11 +4,11 @@ import path from 'node:path';
 import { once } from 'node:events';
 import { fileURLToPath } from 'node:url';
 
-import { completeChat, streamChat } from '../client.ts';
 import type { EncodeOptions } from '../encode.ts';
 import { CodeBuddyRequestError } from '../errors.ts';
 import type { OpenAiChatRequest, OpenAiChunk } from '../types.ts';
 import type { LoginManager } from './login-manager.ts';
+import { Rotator } from './rotate.ts';
 import type { StoredLogin, Store } from './store.ts';
 
 export interface ServerConfig {
@@ -127,26 +127,24 @@ async function writeSse(
 }
 
 function buildRoutes(config: ServerConfig, store: Store, logins: LoginManager): Route[] {
-  const chatOptions = (request: OpenAiChatRequest) => {
-    const credentials = store.activeCredentials();
-    if (credentials === undefined) throw new HttpError(409, 'no active account');
-    return { ...config.encode, defaultModel: request.model, credentials };
-  };
+  const rotator = new Rotator();
 
   const infer = async (req: http.IncomingMessage, res: http.ServerResponse) => {
     const body = await readBody(req, BODY_LIMIT_BYTES);
     const request = parseChatRequest(body);
-    const options = chatOptions(request);
+    const candidates = store.rotationCandidates();
+    if (candidates.length === 0) throw new HttpError(409, 'no active account');
+    const options = { ...config.encode, defaultModel: request.model };
     if (request.stream === true) {
       res.writeHead(200, {
         'content-type': 'text/event-stream',
         'cache-control': 'no-cache',
         connection: 'keep-alive',
       });
-      await writeSse(res, streamChat(request, options));
+      await writeSse(res, rotator.stream(request, candidates, options));
       return;
     }
-    json(res, 200, await completeChat(request, options));
+    json(res, 200, await rotator.complete(request, candidates, options));
   };
 
   const accountParam = (value: string | undefined): string => {

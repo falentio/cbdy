@@ -50,7 +50,7 @@ test('concurrent mutations serialize and leave a consistent file', async () => {
     { uid: 'u2', nickname: 'u2', addedAt: persisted.accounts()[0]?.addedAt, active: true },
   ]);
   assert.equal(persisted.login()?.status, 'pending');
-  assert.equal(persisted.activeCredentials()?.userId, 'u2');
+  assert.equal(persisted.rotationCandidates()[0]?.uid, 'u2');
 });
 
 test('completeLogin persists account, cleared login, and active slot in one state', async () => {
@@ -66,7 +66,7 @@ test('completeLogin persists account, cleared login, and active slot in one stat
   assert.equal(accounts[0]?.uid, 'u1');
   assert.equal(accounts[0]?.active, true);
   assert.equal(persisted.login(), null);
-  assert.equal(persisted.activeCredentials()?.accessToken, tokenFor('u1').accessToken);
+  assert.equal(persisted.rotationCandidates()[0]?.credentials.accessToken, tokenFor('u1').accessToken);
 
   await store.completeLogin(accountFor('u1', 'Renamed'), tokenFor('u1'));
   const upserted = (await reload(filePath)).accounts();
@@ -88,12 +88,12 @@ test('removing the active account falls back to the first remaining one', async 
     ['u2'],
   );
   assert.equal(afterRemove.accounts()[0]?.active, true);
-  assert.equal(afterRemove.activeCredentials()?.userId, 'u2');
+  assert.equal(afterRemove.rotationCandidates()[0]?.uid, 'u2');
 
   assert.equal(await store.removeAccount('u2'), true);
   const emptied = await reload(filePath);
   assert.equal(emptied.accounts().length, 0);
-  assert.equal(emptied.activeCredentials(), undefined);
+  assert.deepEqual(emptied.rotationCandidates(), []);
 });
 
 test('removing an unknown account changes nothing', async () => {
@@ -127,7 +127,7 @@ test('importAccount refreshes credentials but keeps the existing nickname', asyn
   assert.equal(accounts.length, 1);
   assert.equal(accounts[0]?.nickname, 'Kevin');
   assert.equal(accounts[0]?.active, true);
-  const credentials = persisted.activeCredentials();
+  const credentials = persisted.rotationCandidates()[0]?.credentials;
   assert.equal(credentials?.accessToken, 'new-token');
   assert.equal(credentials?.refreshToken, 'new-refresh');
   assert.equal(credentials?.expiresAt, 2_000);

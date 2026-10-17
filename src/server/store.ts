@@ -83,8 +83,14 @@ export class Store {
     }));
   }
 
-  activeCredentials(): Credentials | undefined {
-    return this.state.accounts.find((account) => account.uid === this.state.activeUid)?.credentials;
+  rotationCandidates(): { uid: string; credentials: Credentials }[] {
+    const active = this.state.accounts.find((account) => account.uid === this.state.activeUid);
+    const others = this.state.accounts.filter((account) => account !== active);
+    const head = active === undefined ? [] : [{ uid: active.uid, credentials: active.credentials }];
+    return [
+      ...head,
+      ...others.map((account) => ({ uid: account.uid, credentials: account.credentials })),
+    ];
   }
 
   login(): StoredLogin | null {
